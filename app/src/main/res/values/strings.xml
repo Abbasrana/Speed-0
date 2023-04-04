@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Speed-0</string>
+    <string name="location_permission_denied">Location permission is required to use this app</string>
+</resources>
