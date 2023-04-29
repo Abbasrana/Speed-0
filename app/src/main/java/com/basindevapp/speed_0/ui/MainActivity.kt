@@ -16,6 +16,8 @@ import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -26,23 +28,31 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.basindevapp.speed_0.*
 import com.basindevapp.speed_0.model.SpeedModel
+import com.basindevapp.speed_0.util.CustomProgressBar
 import com.basindevapp.speed_0.util.DoubleClickListener
 import java.math.BigDecimal
 import java.math.RoundingMode
 
 
 class MainActivity : AppCompatActivity(), LocationListener {
-    lateinit var progressBar: ProgressBar
+
+/*    private lateinit var handler: Handler
+    private lateinit var runnable: Runnable
+    private var progress = 150*/
+
+    lateinit var progressBar: CustomProgressBar
     lateinit var speedTxt: TextView
     lateinit var locationManager: LocationManager
     private val LOCATION_PERMISSION_REQUEST_CODE = 1
     private val viewModel: MainViewModel by viewModels()
-    private var threshold = 0
+    private var threshold = 0.0
     private var speedMode = SpeedModel()
     private var ringAlert: Ringtone? = null
     private var notification: Uri? = null
     var circleGreen: Drawable? = null
     var circleRed: Drawable? = null
+    private val progressBarMaxKm = 150
+    private val progressBarMaxMm = 100
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -67,8 +77,16 @@ class MainActivity : AppCompatActivity(), LocationListener {
 
     private fun setupViews() {
         progressBar = findViewById(R.id.progressBar)
-        progressBar.isIndeterminate = false
+        progressBar.setSegmentEnds(30, 30, progressBarMaxMm)
+        progressBar.setMaxValue(progressBarMaxMm)
         speedTxt = findViewById(R.id.speedTxt)
+
+/*        handler = Handler(Looper.getMainLooper())
+        runnable = Runnable {
+            updateProgress()
+            handler.postDelayed(runnable, 1000) // Update every second
+        }*/
+        //  handler.post(runnable)
         speedTxt.setOnClickListener(object : DoubleClickListener() {
             override fun onSingleClick(v: View) {
                 viewModel.setSpeedMode()
@@ -79,12 +97,22 @@ class MainActivity : AppCompatActivity(), LocationListener {
             }
         })
     }
+/*    private fun updateProgress() {
+        if (progress <= 0) {
+            handler.removeCallbacks(runnable)
+        } else {
+            progress -= 10 // Update progress by 10
+            progressBar.setProgress(progress)
+          //  handler.removeCallbacks(runnable) // Stop updating progress when it reaches 150
+        }
+    }*/
 
     private fun setupObservations() {
         viewModel.threshold.observe(this) {
             setSpeedThreshold(it)
         }
     }
+
 
     private fun openBottomSheet() {
         supportFragmentManager.let {
@@ -95,7 +123,14 @@ class MainActivity : AppCompatActivity(), LocationListener {
     }
 
     private fun setSpeedThreshold(speedModel: SpeedModel) {
-        progressBar.max = speedModel.speed
+        if(SpeedMode.KILOMETER.type.equals(speedModel.SpeedMode)){
+            progressBar.setFirstSegmentAndDefaultSegment(50,speedModel.speed.toInt())
+            progressBar.setMaxValue(progressBarMaxKm)
+        }else{
+            progressBar.setFirstSegmentAndDefaultSegment(30,speedModel.speed.toInt())
+            progressBar.setMaxValue(progressBarMaxMm)
+        }
+
         threshold = speedModel.speed
         speedMode = speedModel
     }
@@ -139,18 +174,13 @@ class MainActivity : AppCompatActivity(), LocationListener {
 
         speedTxt.text = "${finalSpeed.toInt()}\n${speedMode.SpeedMode}"
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            progressBar.setProgress(finalSpeed.toInt(), true)
-        } else {
-            progressBar.progress = finalSpeed.toInt()
-        }
+        progressBar.setProgress(finalSpeed.toInt())
 
         if (finalSpeed.toInt() > threshold) {
             playAlert()
         } else {
             if (ringAlert?.isPlaying == true) {
                 ringAlert?.stop()
-                progressBar.progressDrawable = circleGreen
                 speedTxt.setTextColor(resources.getColor(R.color.teal_700, theme))
             }
         }
@@ -159,7 +189,6 @@ class MainActivity : AppCompatActivity(), LocationListener {
     private fun playAlert() {
         if (ringAlert?.isPlaying == false) {
             ringAlert?.play()
-            progressBar.progressDrawable = circleRed
             speedTxt.setTextColor(Color.RED)
         }
     }

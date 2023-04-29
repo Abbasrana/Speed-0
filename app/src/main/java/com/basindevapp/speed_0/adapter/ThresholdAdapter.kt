@@ -7,7 +7,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.basindevapp.speed_0.R
 
-class ThresholdAdapter(val onThresholdSelected: (value: Int) -> Unit) :
+class ThresholdAdapter(val onThresholdSelected: (value: Double) -> Unit) :
     RecyclerView.Adapter<ThresholdAdapter.ThresholdviewHolder>() {
 
     private val list: ArrayList<Int> = arrayListOf()
@@ -37,7 +37,7 @@ class ThresholdAdapter(val onThresholdSelected: (value: Int) -> Unit) :
             var textview = view.findViewById<TextView>(R.id.item)
             textview.text = value.toString()
             textview.setOnClickListener {
-                onThresholdSelected(textview.text.toString().toInt())
+                onThresholdSelected(textview.text.toString().toDouble())
             }
         }
     }

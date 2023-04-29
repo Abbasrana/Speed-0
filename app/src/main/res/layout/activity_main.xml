@@ -7,14 +7,14 @@
     tools:context=".ui.MainActivity">
 
 
-    <ProgressBar
+    <com.basindevapp.speed_0.util.CustomProgressBar
         android:id="@+id/progressBar"
         style="@style/CircularDeterminateProgressBar"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:indeterminateOnly="false"
+        android:layout_margin="20dp"
         android:progress="0"
-        android:progressDrawable="@drawable/circle"
         android:rotation="180"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -25,7 +25,7 @@
         android:id="@+id/speedTxt"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text=""
+        android:text="0 m/h"
         android:textAlignment="center"
         android:textColor="@color/teal_700"
         android:textSize="18sp"
