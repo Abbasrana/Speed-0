@@ -1,13 +1,17 @@
 package com.basindevapp.speed_0.util
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
 import android.util.AttributeSet
+import android.view.MotionEvent
 import android.view.View
+import kotlin.math.atan2
 
+@SuppressLint("ClickableViewAccessibility")
 class CustomProgressBar @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -25,7 +29,7 @@ class CustomProgressBar @JvmOverloads constructor(
     private var firstSegmentEnd = 0
     private var secondSegmentEnd = 0
     private var progress = 0
-
+    var onProgressChangedListener: ((Int) -> Unit)? = null
     init {
         progressPaint.style = Paint.Style.STROKE
         progressPaint.strokeWidth = 40f
@@ -33,8 +37,20 @@ class CustomProgressBar @JvmOverloads constructor(
         backgroundPaint.style = Paint.Style.STROKE
         backgroundPaint.strokeWidth = 40f
         backgroundPaint.color = Color.LTGRAY
-    }
 
+        setOnTouchListener { _, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE-> {
+                    val touchAngle = getTouchAngle(event.x, event.y)
+                    defaultSegmentEnd = (touchAngle * maxValue/ 360f ).toInt()
+                    //v.invalidate()
+                }
+            }
+            onProgressChangedListener?.invoke(defaultSegmentEnd)
+            true
+        }
+
+    }
     fun setProgress(progress: Int) {
         this.progress = progress.coerceIn(0, maxValue) // Ensure progress is within the range
         invalidate()
@@ -43,6 +59,19 @@ class CustomProgressBar @JvmOverloads constructor(
     fun setMaxValue(maxValue: Int) {
         this.maxValue = maxValue
         invalidate()
+    }
+
+    private fun getTouchAngle(x: Float, y: Float): Float {
+        val centerX = width / 2f
+        val centerY = height / 2f
+        val touchX = x - centerX
+        val touchY = y - centerY
+        var angle = Math.toDegrees(atan2(touchY.toDouble(), touchX.toDouble())).toFloat() + 90f
+        if (angle < 0) {
+            angle += 360f
+        }
+        return angle
+
     }
 
     fun setSegmentEnds(defaultSegmentEnd: Int, firstSegmentEnd: Int, secondSegmentEnd: Int) {
@@ -112,3 +141,6 @@ class CustomProgressBar @JvmOverloads constructor(
         }
     }
 }
+
+
+

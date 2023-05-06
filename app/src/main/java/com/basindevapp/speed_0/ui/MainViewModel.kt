@@ -1,12 +1,9 @@
 package com.basindevapp.speed_0
 
-import android.hardware.camera2.params.MeteringRectangle
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.basindevapp.speed_0.model.SpeedModel
-import kotlin.math.roundToInt
-
 class MainViewModel : ViewModel() {
     private val byDefaultThreshold = 50.0
     private val KILOMETER_CONSTANT = 1.0
@@ -46,6 +43,23 @@ class MainViewModel : ViewModel() {
         _threshold.postValue(speedModel)
     }
 
+    fun setThressholdTouch(value: Double) {
+        if (speedModeValue == SpeedMode.METER) {
+            speedModel.apply {
+                speed = value
+                speedModeValue = METER_CONSTANT
+                SpeedMode = com.basindevapp.speed_0.SpeedMode.METER.type
+            }
+        } else {
+            speedModel.apply {
+                speed = value
+                speedModeValue = KILOMETER_CONSTANT
+                SpeedMode = com.basindevapp.speed_0.SpeedMode.KILOMETER.type
+            }
+        }
+        _threshold.postValue(speedModel)
+    }
+
     fun setSpeedMode() {
         if (speedModeValue == SpeedMode.KILOMETER) {
             speedModel.apply {
@@ -59,7 +73,7 @@ class MainViewModel : ViewModel() {
             speedModel.apply {
                 SpeedMode = com.basindevapp.speed_0.SpeedMode.KILOMETER.type
                 speedModeValue = KILOMETER_CONSTANT
-                speed = threshold.value?.speed?.div(METER_CONSTANT) ?: byDefaultThreshold
+                speed = threshold.value?.speed?.div(METER_CONSTANT)?.coerceIn(0.0,150.0) ?: byDefaultThreshold
             }
 
             speedModeValue = SpeedMode.KILOMETER

@@ -2,10 +2,8 @@ package com.basindevapp.speed_0.ui
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.AlarmManager
 import android.content.Context
 import android.content.pm.PackageManager
-import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.location.Location
@@ -14,12 +12,8 @@ import android.location.LocationManager
 import android.media.Ringtone
 import android.media.RingtoneManager
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.view.View
-import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
@@ -42,6 +36,7 @@ class MainActivity : AppCompatActivity(), LocationListener {
 
     lateinit var progressBar: CustomProgressBar
     lateinit var speedTxt: TextView
+    lateinit var thresholdButton: TextView
     lateinit var locationManager: LocationManager
     private val LOCATION_PERMISSION_REQUEST_CODE = 1
     private val viewModel: MainViewModel by viewModels()
@@ -76,17 +71,14 @@ class MainActivity : AppCompatActivity(), LocationListener {
 
 
     private fun setupViews() {
-        progressBar = findViewById(R.id.progressBar)
+        progressBar = findViewById<CustomProgressBar>(R.id.progressBar)
         progressBar.setSegmentEnds(30, 30, progressBarMaxMm)
         progressBar.setMaxValue(progressBarMaxMm)
         speedTxt = findViewById(R.id.speedTxt)
-
-/*        handler = Handler(Looper.getMainLooper())
-        runnable = Runnable {
-            updateProgress()
-            handler.postDelayed(runnable, 1000) // Update every second
-        }*/
-        //  handler.post(runnable)
+        thresholdButton = findViewById(R.id.thresholdButton)
+        progressBar.onProgressChangedListener = { progress ->
+            viewModel.setThressholdTouch(progress.toDouble())
+        }
         speedTxt.setOnClickListener(object : DoubleClickListener() {
             override fun onSingleClick(v: View) {
                 viewModel.setSpeedMode()
@@ -96,16 +88,8 @@ class MainActivity : AppCompatActivity(), LocationListener {
                 openBottomSheet()
             }
         })
+        thresholdButton.setOnClickListener { openBottomSheet() }
     }
-/*    private fun updateProgress() {
-        if (progress <= 0) {
-            handler.removeCallbacks(runnable)
-        } else {
-            progress -= 10 // Update progress by 10
-            progressBar.setProgress(progress)
-          //  handler.removeCallbacks(runnable) // Stop updating progress when it reaches 150
-        }
-    }*/
 
     private fun setupObservations() {
         viewModel.threshold.observe(this) {
@@ -124,11 +108,13 @@ class MainActivity : AppCompatActivity(), LocationListener {
 
     private fun setSpeedThreshold(speedModel: SpeedModel) {
         if(SpeedMode.KILOMETER.type.equals(speedModel.SpeedMode)){
-            progressBar.setFirstSegmentAndDefaultSegment(50,speedModel.speed.toInt())
+            progressBar.setFirstSegmentAndDefaultSegment(speedModel.speed.toInt(),speedModel.speed.toInt())
             progressBar.setMaxValue(progressBarMaxKm)
+            thresholdButton.text = "${speedModel.speed.toInt()} ${speedModel.SpeedMode}"
         }else{
-            progressBar.setFirstSegmentAndDefaultSegment(30,speedModel.speed.toInt())
+            progressBar.setFirstSegmentAndDefaultSegment(speedModel.speed.toInt(),speedModel.speed.toInt())
             progressBar.setMaxValue(progressBarMaxMm)
+            thresholdButton.text = "${speedModel.speed.toInt()} ${speedModel.SpeedMode}"
         }
 
         threshold = speedModel.speed
@@ -181,8 +167,8 @@ class MainActivity : AppCompatActivity(), LocationListener {
         } else {
             if (ringAlert?.isPlaying == true) {
                 ringAlert?.stop()
-                speedTxt.setTextColor(resources.getColor(R.color.teal_700, theme))
             }
+            speedTxt.setTextColor(resources.getColor(R.color.teal_700, theme))
         }
     }
 
